@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS payment_events, payments, order_items, orders, products CASCADE;
+
 CREATE TABLE IF NOT EXISTS products (
   id BIGSERIAL PRIMARY KEY,
   sku TEXT NOT NULL UNIQUE,

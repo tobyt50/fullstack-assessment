@@ -1,7 +1,22 @@
 const express = require("express");
 const productsRepository = require("../repositories/productsRepository");
+const { ADMIN_TOKEN } = require("../config/env");
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  const authHeader = req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (token !== ADMIN_TOKEN) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  next();
+});
 
 router.post("/products", async (req, res, next) => {
   try {
