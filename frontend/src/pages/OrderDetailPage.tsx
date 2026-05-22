@@ -10,20 +10,44 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    getOrder(id).then(setOrder);
+    let active = true;
 
-    setInterval(() => {
-      getOrder(id).then(setOrder);
-    }, 2000);
+    const fetchOrder = () => {
+      getOrder(id)
+        .then((data: Order) => {
+          if (active) setOrder(data);
+        })
+        .catch(console.error);
+    };
+
+    fetchOrder();
+
+    // The interval is now assigned to a variable so we can clean it up
+    const intervalId = setInterval(fetchOrder, 2000);
+
+    // Cleanup function prevents memory leaks and state updates on unmounted components
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
   }, [id]);
 
   if (!order) return <p>Loading order...</p>;
 
   async function pay() {
+    // strict null check required by TS inside async functions
+    if (!order || paying) return;
     setPaying(true);
-    const result = await chargeOrder(order!.id);
-    setOrder(result.order);
-    setPaying(false);
+    try {
+      // Generate idempotency key (using timestamp + order id)
+      const idempotencyKey = `charge-order-${order.id}-${Date.now()}`;
+      const result = await chargeOrder(order.id, idempotencyKey);
+      setOrder(result.order);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPaying(false);
+    }
   }
 
   return (
@@ -54,7 +78,7 @@ export default function OrderDetailPage() {
       </ul>
 
       {order.status === "PENDING" && (
-        <button className="primary" onClick={pay}>
+        <button className="primary" onClick={pay} disabled={paying}>
           {paying ? "Charging..." : "Pay now"}
         </button>
       )}

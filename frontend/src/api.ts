@@ -44,9 +44,14 @@ export function getOrder(id: number | string): Promise<Order> {
   return request<Order>(`/orders/${id}`);
 }
 
-export function chargeOrder(orderId: number): Promise<{ order: Order }> {
+export function chargeOrder(orderId: number, idempotencyKey?: string): Promise<{ order: Order }> {
+  const headers: Record<string, string> = {};
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
   return request<{ order: Order }>(`/payments/charge`, {
     method: "POST",
+    headers,
     body: JSON.stringify({ orderId }),
   });
 }

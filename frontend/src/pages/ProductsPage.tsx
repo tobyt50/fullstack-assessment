@@ -8,20 +8,28 @@ export default function ProductsPage() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    try {
-      const data = await listProducts(q);
-      setProducts(data);
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  }
-
   useEffect(() => {
-    load();
-  }, []);
+    let active = true; // Use an active flag to prevent race conditions on slow network requests
+    setLoading(true);
+
+    listProducts(q)
+      .then((data) => {
+        if (active) {
+          setProducts(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error(err);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false; // Cleanup ignores the response if component unmounts or query changes
+    };
+  }, [q]);
 
   return (
     <div className="page">
@@ -31,10 +39,7 @@ export default function ProductsPage() {
           type="text"
           value={q}
           placeholder="Search products"
-          onChange={(e) => {
-            setQ(e.target.value);
-            load();
-          }}
+          onChange={(e) => setQ(e.target.value)}
         />
       </div>
       {loading && <p>Loading...</p>}
