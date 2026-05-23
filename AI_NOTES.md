@@ -26,6 +26,13 @@ Gemini Pro generated a `withTransaction` wrapper and correctly placed the stock 
 
 ### Prompt 3
 ```text
+Critique your own response above. Attach a confidence score between 0 and 1. If it is less than 0.7, rethink the entire code and rewrite it. Only output the solution once your confidence score is 0.8 or higher.
+```
+**What it produced and what I did with it:**
+I tried this trick to get the model to double-check its own work. It was surprisingly effective. When I asked it to grade itself on the database transaction code, it actually lowered its own score to a 0.5 because it realized it had forgotten to sort the product IDs to prevent deadlocks. It then rewrote the code with the sorted IDs and gave itself a 0.9. I kept this final, self-corrected version. It saved me a lot of debugging time.
+
+### Prompt 4
+```text
 The frontend has a double-submit issue on the Cart checkout button and the Order pay button. How do we prevent this in React while awaiting the API?
 ```
 **What it produced and what I did with it:**
